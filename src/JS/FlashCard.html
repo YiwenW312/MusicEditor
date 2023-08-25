@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FlashCard</title>
+<style>
+#FRONT {font-size: 10em; color: blue;}
+#BACK {font-size: 10em; color: red;}
+</style>
+<script>
+function inject(loc, val){document.getElementById(loc).innerHTML = val;}
+function setNdx(obj, arr){obj.ndx = arr.length; arr.push(obj);}
+function rnd(n){return Math.floor(Math.random()*n);}
+
+var cur, front = 0, back = 1, showingBoth = false, nFaces = 3;
+function Card(faces){this.faces = faces; setNdx(this, Card.ALL); this.known=0;}
+Card.ALL = [];
+Card.prototype.show = function(){
+    inject('BACK', showingBoth? this.faces[back]: '');
+    inject('FRONT', this.faces[front]+this.known);
+}
+Card.prototype.shouldShow = function(){return rnd(100)<getPK(this.known);}
+
+function C(str){cur = new Card(str.split('|'));}
+function clickFront(){if (showingBoth){cur.known++;}click();}
+function clickBack(){cur.known=0;click();}
+function click(){if (showingBoth){nextCard();}showingBoth = !showingBoth; cur.show();}
+function nextCard(){pShowNext();}
+function rndCard(){return Card.ALL[rnd(Card.ALL.length)];}
+
+function cycleCur(){var last=Card.ALL.length-1, i=cur.ndx; cur=Card.ALL[i<last? i+1: 0];return cur;}
+var pk=[100, 70, 50, 30, 20, 10, 8, 6, 4, 3, 2, 1];
+function getPK(i){return i<pk.length?pk[i]: 1;}
+function pShowNext(){
+    var justShowed=cur;
+    cycleCur();
+    while (!cur.shouldShow() || cur == justShowed){cycleCur();}
+}
+
+function incF(){front++;if(front >= nFaces){front = 0;}updateFB();}
+function incB(){back++;if(back >= nFaces){back = 0;}updateFB();}
+function updateFB(){inject('NF', ''+front);inject('NB', ''+back);cur.show();}
+
+</script>
+<script>
+window.onload = function(){
+    nFaces = 3;
+    C('cat|neko|猫');
+    C('dog|inu|狗');
+    C('sun|hi|日');
+    C('mountain|yama|山');
+    cur.show();
+    inject("MSG", Card.ALL.length);
+}
+</script>
+</head>
+<body>
+<h1>FlashCard</h1>
+<div id="MSG">Stuff goes here.</div>
+<div>FRONT: <span id="NF" onclick="incF();">0</span> BACK: <span id="NB" onclick="incB();">1</span></div>
+<div id="FRONT" onclick="clickFront();">FRONT</div>
+<div id="BACK" onclick="clickBack();">BACK</div>
+</body>
+</html>
